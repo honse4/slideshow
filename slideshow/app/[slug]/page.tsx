@@ -1,4 +1,5 @@
 'use client'
+import Display from '@/components/Display';
 import React, {useState} from 'react'
 import useSWR from 'swr'
 const snoowrap = require('snoowrap');
@@ -17,6 +18,7 @@ const fetcher = async (url:string) => fetch(url).then((res) => {
 function page({params }: {params:{slug: string}}) {
 
     const [number, setNumber] = useState(0);
+    const [showTitle, changeTitle] = useState(true);
 
     const { data, error, isLoading } = useSWR(`/${params.slug}/api`,fetcher);
     
@@ -24,22 +26,33 @@ function page({params }: {params:{slug: string}}) {
       if (isLoading) return "Loading...";
       console.log(data);
       
+      if(data?.posts === undefined) return (
+        <div className='flex flex-col bg-black items-center justify-center h-screen'>
+          <div className='flex flex-col bg-black items-center justify-center'>
+            <p className='font-bold pb-2'>Invalid URL. Check one of the following: </p>
+            <ul>
+              <li>The subreddit doesnt exist</li>
+              <li>There is a spelling mistake</li>
+              <li>The subreddit does not have valid image/video links</li>
+            </ul>
+          </div>
+        </div>
+      );
+
 
       return (
-        <div className='flex flex-col h-svh'>
-            <div className='w-4 h-1 z-10 m-0 p-0'>
-                <button onClick={() => {console.log(number);setNumber(preCount => preCount+=1)}}> click me</button>
-            <p>{data.posts[number].title}</p>
-            </div>
+        <div className='h-svh'>
+          {showTitle ? <div className=' z-50 absolute'>
+                <button className='z-50 ' type='button' onClick={() => {setNumber(preCount => preCount+=1)}}> click me</button>
+            <p className='z-10'>{data?.posts[number]?.title}</p>
+            <button type='button' className='absolute' onClick={() => changeTitle(preVal => preVal ? false : true) }>+</button>
+            </div> : <button type='button' className='absolute' onClick={() => changeTitle(preVal => preVal ? false : true) }>+</button> }
             
-           <div className='flex-col h-screen items-center p-0 m-0'>
+            
+            
+           <div className='flex flex-col h-screen items-center p-0 m-0'>
+           <Display data={data} num={number} />
 
-           {
-            data.posts[number].media !== null ? 
-             <video className='h-svh w-svw' autoPlay controls loop src={data.posts[number].media.reddit_video.fallback_url}></video>
-              : <div className='flex flex-col items-center h-screen'>{data.posts[number].domain === 'reddit.com' ? <img className='h-svh' src={data.posts[number].thumbnail}></img> : !data.posts[number].preview.enabled ? <video className='h-svh w-svw' autoPlay controls loop src={data.posts[number].preview.reddit_video_preview.fallback_url}></video>
-            :<img className='h-svh' src={data.posts[number].url}></img>}
-            </div> }
           </div> 
             
         </div>
